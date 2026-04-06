@@ -6,8 +6,7 @@ colorFrom: red
 colorTo: red
 sdk: docker
 pinned: false
--------------
-
+---
 # Resume Screening OpenEnv
 
 An **OpenEnv-compliant** environment that simulates the real-world HR task of evaluating job applications through resume screening.
