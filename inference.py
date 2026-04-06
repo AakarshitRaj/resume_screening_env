@@ -36,19 +36,13 @@ from env import Action, Observation, ResumeScreeningEnv
 # Configuration
 # ─────────────────────────────────────────────────────────────────────────────
 
-API_KEY: str = (
-    os.getenv("HF_TOKEN")
-    or os.getenv("OPENAI_API_KEY")
-    or os.getenv("API_KEY")
-    or "MISSING_KEY"
-)
-API_BASE_URL: str = os.getenv(
-    "API_BASE_URL", "https://router.huggingface.co/v1"
-)
-MODEL_NAME: str = os.getenv(
-    "MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct"
-)
-BENCHMARK: str = "resume_screening"
+HF_TOKEN = os.getenv("HF_TOKEN")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
+API_KEY = HF_TOKEN
+BENCHMARK = "resume_screening"
+
 SUCCESS_SCORE_THRESHOLD: float = 0.50
 TEMPERATURE: float = 0.1
 MAX_TOKENS: int = 700
