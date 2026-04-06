@@ -64,9 +64,8 @@ _env: Optional[ResumeScreeningEnv] = None
 # Request / Response schemas
 # ─────────────────────────────────────────────────────────────────────────────
 
-# PUT THIS INSTEAD:
 class ResetRequest(BaseModel):
-    model_config = {"extra": "allow"}
+    model_config = {"extra": "allow"}   # Pydantic v2 style — accepts empty {} from validator
     task_name: str = "binary_screen"
 
 

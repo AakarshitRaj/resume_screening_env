@@ -26,6 +26,7 @@ dependencies = [
     "openai>=1.0.0",
     "httpx>=0.25.0",
     "python-multipart>=0.0.6",
+    "openenv-core>=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -34,9 +35,12 @@ dev = [
     "httpx>=0.25.0",
 ]
 
+# ✅ Required server entry point
+[project.scripts]
+server = "server:app"
+
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["resume_screening_env*"]
 
 [project.urls]
 Homepage = "https://huggingface.co/spaces/aakarshitraj/resume-screening-env"
