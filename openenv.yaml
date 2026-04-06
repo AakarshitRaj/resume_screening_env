@@ -1,0 +1,166 @@
+name: resume-screening-env
+version: "1.0.0"
+description: >
+  An OpenEnv-compliant environment that simulates the real-world HR task of
+  evaluating job applications through resume screening. An agent must read
+  resumes and job descriptions, then make structured decisions: binary
+  Accept/Reject, skill gap analysis, and multi-candidate ranking.
+author: "OpenEnv Participant"
+tags:
+  - openenv
+  - resume-screening
+  - hr
+  - nlp
+  - real-world
+
+# ── Tasks ──────────────────────────────────────────────────────────────────
+
+tasks:
+  - name: binary_screen
+    description: >
+      Given one resume and one job description, decide ACCEPT or REJECT.
+      The correct answer requires recognising an experience-years shortfall.
+    difficulty: easy
+    max_steps: 2
+    reward_range: [0.0, 1.0]
+    grader: deterministic
+    expected_baseline_score: 0.70
+
+  - name: skill_match
+    description: >
+      Given one resume and a 10-item required-skills list, identify which
+      skills are present and which are missing, then provide an overall
+      match score (0.0–1.0). Ground truth: 7/10 skills matched → 0.70.
+    difficulty: medium
+    max_steps: 3
+    reward_range: [0.0, 1.0]
+    grader: deterministic
+    expected_baseline_score: 0.55
+
+  - name: rank_candidates
+    description: >
+      Given five resumes for a Senior PM role, rank them from best to worst.
+      Reward is the normalised Kendall-tau correlation with the ground-truth
+      ranking. Ground truth: [1, 3, 0, 4, 2].
+    difficulty: hard
+    max_steps: 4
+    reward_range: [0.0, 1.0]
+    grader: deterministic
+    expected_baseline_score: 0.45
+
+# ── Observation Space ───────────────────────────────────────────────────────
+
+observation_space:
+  type: object
+  fields:
+    task_name:
+      type: string
+      description: Name of the current task
+    step:
+      type: integer
+      description: Current step number (0 = initial, post-reset)
+    job_description:
+      type: string
+      description: Full text of the job description
+    resume:
+      type: string
+      nullable: true
+      description: Single resume text (tasks 1 and 2)
+    resumes:
+      type: array
+      items: string
+      nullable: true
+      description: List of 5 resume texts (task 3)
+    required_skills:
+      type: array
+      items: string
+      nullable: true
+      description: Required skills list (task 2)
+    feedback:
+      type: string
+      description: Environment instruction or result of the previous action
+    done:
+      type: boolean
+      description: True when the episode is complete
+
+# ── Action Space ────────────────────────────────────────────────────────────
+
+action_space:
+  type: object
+  fields:
+    action_type:
+      type: string
+      enum: [analyze, screen, score_skills, rank]
+      description: What kind of action the agent is taking
+    content:
+      type: string
+      description: Free-text analysis / reasoning (always required)
+    decision:
+      type: string
+      enum: [ACCEPT, REJECT]
+      nullable: true
+      description: Final binary screening decision (task 1, step 2)
+    score:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      nullable: true
+      description: Final match score (task 2, step 3)
+    rankings:
+      type: array
+      items: integer
+      nullable: true
+      description: Candidate indices ordered best→worst (task 3, step 4)
+    matched_skills:
+      type: array
+      items: string
+      nullable: true
+      description: Required skills found in resume (task 2, step 1)
+    missing_skills:
+      type: array
+      items: string
+      nullable: true
+      description: Required skills absent from resume (task 2, step 2)
+
+# ── API Endpoints ────────────────────────────────────────────────────────────
+
+endpoints:
+  reset:
+    method: POST
+    path: /reset
+    request_body:
+      task_name: string (optional, default="binary_screen")
+    response: observation + reward + done + info
+
+  step:
+    method: POST
+    path: /step
+    request_body:
+      action: Action object
+    response: observation + reward + done + info
+
+  state:
+    method: GET
+    path: /state
+    response: EnvState object
+
+  tasks:
+    method: GET
+    path: /tasks
+    response: list of task descriptions
+
+  health:
+    method: GET
+    path: /health
+    response: status ok
+
+# ── Runtime ──────────────────────────────────────────────────────────────────
+
+runtime:
+  language: python
+  python_version: "3.11"
+  framework: fastapi
+  port: 7860
+  inference_timeout_minutes: 20
+  min_memory_gb: 2
+  min_vcpus: 1
