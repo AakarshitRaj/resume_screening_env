@@ -1,16 +1,28 @@
 """
-server/app.py — OpenEnv required entry point for multi-mode deployment.
-
-This file re-exports the FastAPI app from the root server.py so that
-OpenEnv can find it at the standard location: server/app.py
+server/app.py — OpenEnv required entry point.
+Must have a callable main() function and if __name__ == '__main__' block.
 """
 
 import sys
 import os
 
-# Add parent directory to path so we can import from root
+# Add parent directory to path so we can import root modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from server import app  # re-export the FastAPI app
+import uvicorn
+from server import app  # re-export FastAPI app from root server.py
 
-__all__ = ["app"]
+
+def main():
+    """Main entry point — called by OpenEnv multi-mode deployment."""
+    port = int(os.getenv("PORT", 7860))
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        log_level="info",
+    )
+
+
+if __name__ == "__main__":
+    main()

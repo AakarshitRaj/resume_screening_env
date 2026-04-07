@@ -35,9 +35,9 @@ dev = [
     "httpx>=0.25.0",
 ]
 
-# ✅ Required server entry point
+# ✅ Entry point references main() function — not app object
 [project.scripts]
-server = "server:app"
+server = "server.app:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
