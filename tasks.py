@@ -31,8 +31,8 @@ from data import (
 
 
 def _strict(value: float) -> float:
-    """Clamp reward/score to strictly (0.001, 0.999) — never exactly 0.0 or 1.0."""
-    return round(max(0.001, min(0.999, float(value))), 4)
+    """Clamp reward/score to strictly (0.01, 0.99) — safe for :.2f formatting."""
+    return round(max(0.01, min(0.99, float(value))), 4)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -141,7 +141,7 @@ class BinaryScreenTask:
             done=done,
         )
         # Clamp step reward strictly within (0, 1)
-        reward = max(0.001, min(0.999, reward))
+        reward = max(0.01, min(0.99, reward))
         return {
             "observation": new_obs,
             "state": {"observation": new_obs, "internal": new_internal},
@@ -153,7 +153,7 @@ class BinaryScreenTask:
     @staticmethod
     def grade(decision: str) -> float:
         """Deterministic terminal grader (ignores reasoning)."""
-        return 0.999 if decision.upper().strip() == TASK1_GROUND_TRUTH["decision"] else 0.001
+        return 0.99 if decision.upper().strip() == TASK1_GROUND_TRUTH["decision"] else 0.01
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -205,16 +205,16 @@ class SkillMatchTask:
 
     def _f1(self, agent_list: List[str], ground_truth: List[str]) -> float:
         if not agent_list:
-            return 0.001   # strictly > 0.0
+            return 0.01
         gt = {self._normalize(s) for s in ground_truth}
         ag = {self._normalize(s) for s in agent_list}
         tp = len(gt & ag)
         prec = tp / len(ag) if ag else 0.0
         rec = tp / len(gt) if gt else 0.0
         if prec + rec == 0:
-            return 0.001   # strictly > 0.0
+            return 0.01
         raw = 2 * prec * rec / (prec + rec)
-        return min(0.999, max(0.001, raw))  # strictly within (0, 1)
+        return round(min(0.99, max(0.01, raw)), 4)  # strictly within (0, 1)
 
     def reset(self) -> Dict[str, Any]:
         skills_block = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(TASK2_REQUIRED_SKILLS))
@@ -275,7 +275,7 @@ class SkillMatchTask:
                 elif diff <= 0.20:
                     reward = 0.15
                 else:
-                    reward = max(0.001, 0.40 * (1.0 - diff / 0.50))
+                    reward = max(0.01, 0.40 * (1.0 - diff / 0.50))
             done = True
             feedback = (
                 f"Score recorded: {action.score}. "
@@ -292,7 +292,7 @@ class SkillMatchTask:
             done=done,
         )
         # Clamp step reward strictly within (0, 1)
-        reward = max(0.001, min(0.999, reward))
+        reward = max(0.01, min(0.99, reward))
         return {
             "observation": new_obs,
             "state": {"observation": new_obs, "internal": new_internal},
@@ -306,7 +306,7 @@ class SkillMatchTask:
         f1_m = self._f1(matched, self._GT["matched_skills"])
         f1_x = self._f1(missing, self._GT["missing_skills"])
         diff = abs(score - self._GT["score"])
-        score_acc = max(0.001, min(0.999, 1.0 - diff * 5))  # strictly (0,1)
+        score_acc = max(0.01, min(0.99, 1.0 - diff * 5))  # strictly (0,1)
         return _strict(f1_m * 0.35 + f1_x * 0.35 + score_acc * 0.30)
 
 
@@ -348,7 +348,7 @@ class RankCandidatesTask:
         """
         n = len(ground_truth)
         if n <= 1:
-            return 0.999
+            return 0.99
 
         gt_pos = {idx: rank for rank, idx in enumerate(ground_truth)}
         pred_pos = {idx: rank for rank, idx in enumerate(predicted)}
@@ -373,7 +373,7 @@ class RankCandidatesTask:
             return 0.5
         tau = (concordant - discordant) / total
         raw = (tau + 1.0) / 2.0               # map [-1,1] → [0,1]
-        return round(max(0.001, min(0.999, raw)), 4)  # strictly (0,1)
+        return round(max(0.01, min(0.99, raw)), 4)
 
     # ── OpenEnv methods ──────────────────────────────────────────────────────
 
@@ -444,7 +444,7 @@ class RankCandidatesTask:
                 tau = self._kendall_tau_normalized(rankings[:5], self._GT["ranking"])
                 reward = round(tau * 0.50, 4)
             else:
-                reward = 0.0
+                reward = 0.01
             done = True
             feedback = (
                 f"Ranking recorded: {rankings[:5] if rankings else 'none'}. "
@@ -460,7 +460,7 @@ class RankCandidatesTask:
             done=done,
         )
         # Clamp step reward strictly within (0, 1)
-        reward = max(0.001, min(0.999, reward))
+        reward = max(0.01, min(0.99, reward))
         return {
             "observation": new_obs,
             "state": {"observation": new_obs, "internal": new_internal},

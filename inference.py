@@ -271,7 +271,7 @@ def run_task(client: OpenAI, task_cfg: Dict[str, Any]) -> float:
     rewards: List[float] = []
     steps_taken: int = 0
     history: List[str] = []
-    score: float = 0.001
+    score: float = 0.01
     success: bool = False
 
     # ── [START] — one per episode ─────────────────────────────────────────────
@@ -311,12 +311,12 @@ def run_task(client: OpenAI, task_cfg: Dict[str, Any]) -> float:
 
         # Score must be STRICTLY between 0 and 1 (exclusive) — not 0.0, not 1.0
         raw = sum(rewards)
-        score = max(0.001, min(0.999, raw))
+        score = max(0.01, min(0.99, raw))
         success = score >= SUCCESS_SCORE_THRESHOLD
 
     except Exception as e:
         print(f"[DEBUG] Task '{task_name}' exception: {e}", flush=True)
-        score = 0.001  # strictly > 0.0
+        score = 0.01
         success = False
 
     finally:
